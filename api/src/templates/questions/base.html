@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Question Creation{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <select class="form-control" id="part" name="part" style="width: 150px;">
+        <option value="">Select Part</option>
+        <option value="part1" {% if part == 'part1' %}selected{% endif %}>Part 1</option>
+        <option value="part2" {% if part == 'part2' %}selected{% endif %}>Part 2</option>
+        <option value="part3" {% if part == 'part3' %}selected{% endif %}>Part 3</option>
+    </select>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto">
+            {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                </li>
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+
+<!-- Content -->
+<div class="container">
+    {% block content %}
+    {% endblock %}
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#part').change(function () {
+            var part = $(this).val();
+            if (part) {
+                window.location.href = '/questions/create/' + part + '/';
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Questions</h1>
+    <ul>
+        {% for question in questions %}
+            <li>{{ question.question_txt }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

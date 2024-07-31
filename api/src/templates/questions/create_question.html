@@ -1,0 +1,90 @@
+{% extends 'questions/base.html' %}
+
+{% block title %}Create Question{% endblock %}
+
+{% block content %}
+<div class="row mt-5">
+    <div class="col-md-6 offset-md-3">
+        <h2>Create Question</h2>
+        <form id="questionForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="questionText">Question Text</label>
+                <textarea rows=3 class="form-control" name="question_txt" id="questionText" placeholder="Enter your question" required></textarea>
+            </div>
+            {% if part == 'part1' %}
+            <div class="form-group">
+                <label for="categorySelect">Select Category</label>
+                <select class="form-control" id="categorySelect" name="question_category" required>
+                    <option value="">Select a category</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            {% if part == 'part3' %}
+            <div class="form-group">
+                <label for="part2QuestionSelect">Select Part 2 Question</label>
+                <select class="form-control" id="part2QuestionSelect" name="part2_question" required>
+                    <option value="">Select a Part 2 Question</option>
+                    {% for question in part2_questions %}
+                    <option value="{{ question.id }}">{{ question.question_txt }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary" id="generateButton">Generate Audio</button>
+            <div id="audioContainer" class="mt-3"></div>
+            <button type="submit" class="btn btn-success mt-3" id="saveButton">Save Question</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#questionForm').submit(false);
+
+        $('#generateButton').click(function (e) {
+            var text = $('#questionText').val();
+            var randomValue = Math.random();
+        
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'generate_audio' %}",
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                data: {
+                    'text': text
+                },
+                success: function (response) {
+                    $('#audioContainer').html('<audio controls controlsList="nodownload"><source src="' + response.audio_url + '?_=' + randomValue + '" type="audio/ogg"></audio>');
+                }
+            });
+        });
+        
+
+        $('#saveButton').click(function () {
+            var text = $('#questionText').val();
+            var categoryId = $('#categorySelect').val();
+            var part2QuestionId = $('#part2QuestionSelect').val();
+            $.ajax({
+                type: 'POST',
+                url: '{% url 'create_question' part=part %}',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                data: {
+                    'question_txt': text,
+                    'question_category': categoryId,
+                    'part2_question': part2QuestionId
+                },
+                success: function (response) {
+                    alert('Question saved successfully!');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

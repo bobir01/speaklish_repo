@@ -1,0 +1,74 @@
+version: "3.9"
+services:
+  postgres:
+    container_name: ${PROJECT_NAME}_postgres
+    image: postgres:15
+    env_file: prod.env
+    restart: unless-stopped
+    volumes:
+      - "postgres-data:/var/lib/postgresql/data/"
+      - "./data-init:/docker-entrypoint-initdb.d/"
+    ports:
+        - "5432:5432"
+
+  redis:
+    container_name: ${PROJECT_NAME}_redis
+    image: redis:6-alpine
+    restart: always
+    env_file:
+      - prod.env
+
+  
+  web: &web
+    container_name: ${PROJECT_NAME}_backend
+    restart: always
+    build:
+      context: ./
+      dockerfile: Dockerfileprod
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8321 --timeout 120
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - ./src:/app/web
+      - ./static:/home/app/web/static
+      - ./media:/home/app/web/media
+      - ./locale:/home/app/web/locale
+    env_file:
+      - prod.env
+    environment:
+      - TZ=Asia/Tashkent
+    ports:
+      - 8321:8321
+    depends_on:
+      - postgres
+      - redis
+
+
+  celery:
+    <<: *web
+    container_name: ${PROJECT_NAME}_celery
+    ports: [ ]
+    command: celery -A core worker  --loglevel=info --autoscale=10,3 --concurrency=10
+    restart: always
+
+
+  cefr_level:
+    container_name: ${PROJECT_NAME}_cefr_level
+    build:
+      dockerfile: src/cefr/Dockerfile
+      context: .
+    restart: always
+    env_file:
+      - prod.env
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+    ports:
+      - ":8080"
+    depends_on:
+      - postgres
+      - redis
+  
+  
+volumes:
+  postgres-data:
+  staticfiles-data:
+  media-data:
